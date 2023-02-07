@@ -1,0 +1,35 @@
+(ns mobile-number
+  (:require ["package:flutter/services.dart" :refer [PlatformException]]
+            ["package:mobile_number/mobile_number.dart" :refer [MobileNumber SimCard]]))
+
+(defn get-mobile-number
+  [cb]
+  (try
+    (let [sims 
+              ;; this raises the error
+              (await (.-getSimCards MobileNumber))
+              ;; current workaround
+              #_(await ^#/(Future #/(List SimCard)) (.-getSimCards MobileNumber))
+          ]
+      (cb sims))
+    (catch PlatformException _
+      nil)))
+
+(defn listen-permission
+  [cb]
+  (.listenPhonePermission MobileNumber
+                          (fn [granted?] (when granted? (get-mobile-number cb)))))
+
+(defn init-mobile-number
+  [cb]
+  (if-not (await (.-hasPhonePermission MobileNumber))
+    (do
+      (listen-permission cb)
+      (.requestPhonePermission MobileNumber))
+    (get-mobile-number cb)))
+
+(defn first-number
+  [sims]
+  (when-let [sim (first sims)]
+    (.-number ^SimCard sim)))
+

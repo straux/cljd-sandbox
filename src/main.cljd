@@ -1,0 +1,11 @@
+(ns main
+  (:require ["package:flutter/material.dart" :as m]
+            ["package:flutter/widgets.dart" :as w]
+            [mobile-number :as mobile]))
+
+(defn main []
+  (w/WidgetsFlutterBinding.ensureInitialized)
+  (let [app-state (atom {:lang "fr" :country "FR"})]
+    (mobile/init-mobile-number (fn [sims]
+                                 (swap! app-state assoc :phone (mobile/first-number sims))))
+    (dart:core/print (str @app-state))))
